@@ -12,6 +12,7 @@ import json
 import threading
 import functools
 import textwrap
+from PyQt5.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QLabel, QTextEdit, QPushButton
 
 Chatbot = None
 ConversationStyle = None
@@ -109,10 +110,11 @@ class idaBingGPTPlugin_t(idaapi.plugin_t):
     comment = "Use Bing GPT to find/analysis function in ida pro"
     wanted_name = "idaBingGPTPlugin"
     wanted_hotkey = ""
-    version = "1.0.1"
+    version = "1.1.0"
     explain_action = "ibgp:explain_function"
     vuln_action = "ibgp:vuln_function"
     exp_action = "ibgp:exp_function"
+    customize_action = "ibgp:customize"
     menu = None
 
     def init(self):
@@ -127,6 +129,12 @@ class idaBingGPTPlugin_t(idaapi.plugin_t):
         addon.url = "https://github.com/p1ay8y3ar"
         addon.version = "1.0.1"
         idaapi.register_addon(addon)
+        customize_exp = idaapi.action_desc_t(self.customize_action,
+                                             'Use Your Own Prompt',
+                                             CustomizeActionHandler(),
+                                             "Ctrl+Alt+I",
+                                             "Use Your Own Prompt to analyze",
+                                             198)
         action_explain = idaapi.action_desc_t(self.explain_action,
                                               'Analyze this function',
                                               ExplainHandler(),
@@ -150,6 +158,7 @@ class idaBingGPTPlugin_t(idaapi.plugin_t):
         idaapi.register_action(action_explain)
         idaapi.register_action(action_vuln)
         idaapi.register_action(action_exp)
+        idaapi.register_action(customize_exp)
 
         self.menu = ContextMenuHooks()
         self.menu.hook()
@@ -166,9 +175,57 @@ class ContextMenuHooks(idaapi.UI_Hooks):
     def finish_populating_widget_popup(self, form, popup):
         # Add actions to the context menu of the Pseudocode view
         if idaapi.get_widget_type(form) == idaapi.BWN_PSEUDOCODE:
+            idaapi.attach_action_to_popup(form, popup, idaBingGPTPlugin_t.customize_action, "idaBingGPTPlugin/")
             idaapi.attach_action_to_popup(form, popup, idaBingGPTPlugin_t.explain_action, "idaBingGPTPlugin/")
             idaapi.attach_action_to_popup(form, popup, idaBingGPTPlugin_t.vuln_action, "idaBingGPTPlugin/")
             idaapi.attach_action_to_popup(form, popup, idaBingGPTPlugin_t.exp_action, "idaBingGPTPlugin/")
+
+
+class UserCustomizePrompt(QDialog):
+    def __init__(self, ctx):
+        self._ctx = ctx
+        super(UserCustomizePrompt, self).__init__()
+        self.setWindowTitle("idaBingGPTPlugin")
+        layout_main = QVBoxLayout()
+        layout_main.addWidget(QLabel("Your Prompt here:"))
+        self.edit_base = QTextEdit()
+        layout_main.addWidget(self.edit_base)
+        self.btn_cancel = QPushButton("Cancel")
+        self.btn_confirm = QPushButton("Confirm")
+        layout_size = QHBoxLayout()
+        layout_main.addLayout(layout_size)
+        layout_main.addWidget(self.btn_confirm)
+        self.setLayout(layout_main)
+
+        self.btn_confirm.clicked.connect(self.click_confirm)
+
+        self.show()
+        self.exec_()
+
+    def click_cancel(self):
+        self.close()
+
+    def click_confirm(self):
+        decompiler_output = ida_hexrays.decompile(idaapi.get_screen_ea())
+        v = ida_hexrays.get_widget_vdui(self._ctx.widget)
+        query_wrapper(self.edit_base.toPlainText() + "\n"
+                      + str(
+            decompiler_output),
+                      functools.partial(comment_callback, address=idaapi.get_screen_ea(), view=v))
+
+        self.click_cancel()
+
+
+class CustomizeActionHandler(idaapi.action_handler_t):
+    def __init__(self):
+        idaapi.action_handler_t.__init__(self)
+
+    def activate(self, ctx):
+        UserCustomizePrompt(ctx)
+        return 1
+
+    def update(self, ctx):
+        return idaapi.AST_ENABLE_ALWAYS
 
 
 class VulnHandler(idaapi.action_handler_t):
@@ -178,7 +235,7 @@ class VulnHandler(idaapi.action_handler_t):
     def activate(self, ctx):
         decompiler_output = ida_hexrays.decompile(idaapi.get_screen_ea())
         v = ida_hexrays.get_widget_vdui(ctx.widget)
-        # todo 
+        # todo
         query_wrapper(str(decompiler_output) + "\nFind possible vulnerability in function",
                       functools.partial(comment_callback, address=idaapi.get_screen_ea(), view=v))
         return 1
