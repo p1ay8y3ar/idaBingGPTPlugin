@@ -5,7 +5,7 @@ import idc
 import ida_hexrays
 import ida_kernwin
 import pkg_resources
-import requests
+import urllib.request
 import pip
 import os
 import json
@@ -21,9 +21,8 @@ def check_version(package_name: str = "re-edge-gpt"):
     try:
         pkg_name, installed_version = pkg_resources.get_distribution(
             package_name).project_name, pkg_resources.get_distribution(package_name).version
-        # print("[*]pkg_name:",pkg_name,"version:",installed_version)
-        response = requests.get(f"https://pypi.org/pypi/{package_name}/json")
-        data = response.json()
+        response = urllib.request.urlopen(f"https://pypi.org/pypi/{package_name}/json")
+        data = json.loads(response.read())
         latest_version = data["info"]["version"]
         if installed_version != latest_version:
             raise Exception("install new dependencies")
