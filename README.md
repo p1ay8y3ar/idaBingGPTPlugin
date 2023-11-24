@@ -23,8 +23,11 @@ Press right mouse you will see the tab **idaBingGPTPlugin**.
 ![](./img/use.png)
 
 
+> make sure you can access bing.com correctly(For example, in China, use a VPN)
+
+
 ## Test on
-- idapro 8.4  macOS arm64 version
+- idapro 8.3  macOS arm64 version
 - idapro 7.6  macOS arm64 version
 
 ## Thanks to 
