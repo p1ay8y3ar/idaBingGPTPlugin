@@ -3,13 +3,14 @@
  * @Author: p1ay8y3ar
  * @Date: 2023-11-23 18:50:30
  * @LastEditor: p1ay8y3ar
- * @LastEditTime: 2023-11-23 19:14:27
+ * @LastEditTime: 2023-11-24 11:09:24
  * @Email: p1ay8y3ar@gmail.com
 -->
 # idaBingGPTPlugin ![Page Views Count](https://badges.toozhao.com/badges/01HFXX39F3TRYW0SE0QTZG5FYB/green.svg)
 Use the free Microsoft bing's gpt with ida pro, to perform free analyzes!
 
 ## Before use 
+- **python 3.9+**
 - clone this repo, move `idaBingGPTPlugin.py` and `ibgp_cookies.json` to your ida plugins folder
 - open `bing.com/chat` in your Edge browser 
 - install browser extension [Cookie-Editor](https://microsoftedge.microsoft.com/addons/detail/cookieeditor/neaplmfkghagebokkhpjpoebhdledlfi)
@@ -29,6 +30,7 @@ Press right mouse you will see the tab **idaBingGPTPlugin**.
 ## Test on
 - idapro 8.3  macOS arm64 version
 - idapro 7.6  macOS arm64 version
+- idapro 7.5  windows version with python3.9.13
 
 ## Thanks to 
 [VulChatGPT](https://github.com/ke0z/VulChatGPT)
